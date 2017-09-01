@@ -7,11 +7,11 @@
     android:layout_height="match_parent"
     tools:context="com.example.jdnew.ownrecyclerview.MainActivity">
 
-    <com.example.jdnew.ownrecyclerview.PullToRefreshRecyclerView
+    <com.example.jdnew.jdrecyclerview.PullToRefreshRecyclerView
         android:id="@+id/pullToRefreshRecyclerview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="visible"></com.example.jdnew.ownrecyclerview.PullToRefreshRecyclerView>
+        android:visibility="visible"></com.example.jdnew.jdrecyclerview.PullToRefreshRecyclerView>
 
 
 
