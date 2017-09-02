@@ -44,6 +44,14 @@ public class PullToRefreshRecyclerView extends RelativeLayout {
      * 竖直向下的滑动方向
      */
     private final int DIRECTION_DOWN = 1;
+    /**
+     * 检查是否一开始有设置禁止刷新
+     */
+    private boolean isLockRefresh = false;
+    /**
+     * 判断是否一开始有设置禁止加载
+     */
+    private boolean isLockLoad = false;
 
     public PullToRefreshRecyclerView(Context context) {
         super(context, null);
@@ -96,7 +104,7 @@ public class PullToRefreshRecyclerView extends RelativeLayout {
                     //如果reyclerview不能在继续往下滑动，表明到达底部了，那么就显示加载更多
                     if (mLayoutManager.canScrollVertically() &&
                             !recyclerView.canScrollVertically(DIRECTION_DOWN)
-                            && !isRefreshEnable()) {
+                            && !isRefreshEnable() && !isLockLoad) {
                         mBottomLoadView.setVisibility(VISIBLE);
                         onRefreshOrLoadListener.onLoadMore();
                         innerRefreshAndLoadListener.isLoading(true);
@@ -110,15 +118,23 @@ public class PullToRefreshRecyclerView extends RelativeLayout {
             @Override
             public void isLoading(boolean isLoad) {
                 mIsLoad = isLoad;
-                mIsRefresh = !isLoad;
-                mSwipeRefreshLayout.setEnabled(!isLoad);
+                //如果一开始没有设置禁止刷新，则可以改变状态
+                if (!isLockRefresh) {
+                    mIsRefresh = !isLoad;
+                    mSwipeRefreshLayout.setEnabled(!isLoad);
+                }
+
 
             }
 
             @Override
             public void isRefreshing(boolean isRefresh) {
                 mIsRefresh = isRefresh;
-                mIsLoad = !isRefresh;
+                //如果一开始没有设置禁止加载，则可以改变状态
+                if (!isLockLoad) {
+                    mIsLoad = !isRefresh;
+                }
+
 
             }
         });
@@ -147,6 +163,25 @@ public class PullToRefreshRecyclerView extends RelativeLayout {
             mRecyclerView.setLayoutManager(mLayoutManager);
         }
 
+    }
+
+    /**
+     * 禁止使用刷新功能（默认开启）
+     * @param enable
+     */
+    public void setDoNotRefresh(boolean enable){
+        this.isLockRefresh = enable;
+        this.mIsRefresh = enable;
+        mSwipeRefreshLayout.setEnabled(mIsRefresh);
+    }
+
+    /**
+     * 禁止使用加载功能（默认开启）
+     * @param enable
+     */
+    public void setDoNotLoad(boolean enable){
+        this.isLockLoad = enable;
+        this.mIsLoad = enable;
     }
 
     /**
@@ -193,18 +228,25 @@ public class PullToRefreshRecyclerView extends RelativeLayout {
      * 显示错误状态
      */
     public void showErrorStatus(){
-        if (mErrorView.getParent() == null) {
-            mStatusLayout.removeAllViews();
+        if (mEmptyView.getParent() == null && mErrorView.getParent() == null) {
+
             mStatusLayout.addView(mErrorView);
-            mRecyclerView.setVisibility(GONE);
+
         }
+        mRecyclerView.setVisibility(GONE);
     }
 
     /**
      * 显示有数据的页面
      */
     public void showDataStatus() {
-        mStatusLayout.removeAllViews();
+        if (mEmptyView.getParent() != null) {
+            mStatusLayout.removeView(mEmptyView);
+        }else if(mErrorView.getParent() != null){
+            mStatusLayout.removeView(mErrorView);
+        }
+
+
         mRecyclerView.setVisibility(VISIBLE);
     }
 
@@ -212,8 +254,7 @@ public class PullToRefreshRecyclerView extends RelativeLayout {
      * 显示空白状态页
      */
     public void showEmptyStatus() {
-        if (mEmptyView.getParent() == null) {
-            mStatusLayout.removeAllViews();
+        if (mEmptyView.getParent() == null && mErrorView.getParent() == null) {
             mStatusLayout.addView(mEmptyView , statusLayoutParams);
         }
         mRecyclerView.setVisibility(GONE);
@@ -253,6 +294,8 @@ public class PullToRefreshRecyclerView extends RelativeLayout {
             mBottomLoadView.setVisibility(GONE);
             innerRefreshAndLoadListener.isLoading(false);
         }
+
+
     }
 
 
@@ -308,4 +351,10 @@ public class PullToRefreshRecyclerView extends RelativeLayout {
     private void setInnerRefreshAndLoadListener(PullToRefreshRecyclerView.innerRefreshAndLoadListener innerRefreshAndLoadListener) {
         this.innerRefreshAndLoadListener = innerRefreshAndLoadListener;
     }
+
+    public void addItemDecoration(RecyclerView.ItemDecoration itemDecoration){
+        mRecyclerView.addItemDecoration(itemDecoration);
+    }
+
+
 }
